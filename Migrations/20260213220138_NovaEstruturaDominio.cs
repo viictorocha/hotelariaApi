@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace hotelariaApi.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class NovaEstruturaDominio : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,8 +19,9 @@ namespace hotelariaApi.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Numero = table.Column<string>(type: "text", nullable: false),
                     Tipo = table.Column<string>(type: "text", nullable: false),
-                    PrecoDiaria = table.Column<decimal>(type: "numeric", nullable: false),
-                    EstaOcupado = table.Column<bool>(type: "boolean", nullable: false)
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    Capacidade = table.Column<int>(type: "integer", nullable: false),
+                    PrecoBase = table.Column<decimal>(type: "numeric", nullable: false)
                 },
                 constraints: table =>
                 {
