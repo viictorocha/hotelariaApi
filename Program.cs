@@ -140,13 +140,17 @@ app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
 });
 
 // AUTH - Login
-app.MapPost("/auth/login", async (Usuario login, HotelDbContext db) => {
+app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
+    // Procuramos o usuário pelo email
     var user = await db.Usuarios
         .Include(u => u.Perfil)
         .ThenInclude(p => p.Funcionalidades)
-        .FirstOrDefaultAsync(u => u.Email == login.Email && u.SenhaHash == login.SenhaHash);
+        .FirstOrDefaultAsync(u => u.Email == login.Email);
 
-    if (user == null) return Results.Unauthorized();
+    if (user == null || user.SenhaHash != login.Senha) 
+    {
+        return Results.Unauthorized();
+    }
 
     var token = GenerateJwtToken(user, jwtKey); 
     return Results.Ok(new { token, user });

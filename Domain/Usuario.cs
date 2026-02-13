@@ -7,3 +7,5 @@ public class Usuario {
     public int PerfilId { get; set; }
     public Perfil Perfil { get; set; } = null!;
 }
+
+public record LoginRequest(string Email, string Senha);
