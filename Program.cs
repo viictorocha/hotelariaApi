@@ -4,6 +4,7 @@ using HotelariaApi.Domain;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 var jwtKey = builder.Configuration["JWT_SECRET_KEY"];
@@ -107,7 +108,33 @@ app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
 // FUNCIONALIDADES
 app.MapGet("/funcionalidades", async (HotelDbContext db) => await db.Funcionalidades.ToListAsync());
 
+string GenerateJwtToken(Usuario user)
+{
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var key = Encoding.ASCII.GetBytes(builder.Configuration["JWT_SECRET_KEY"] ?? "chave_temporaria_123456789");
+    
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, user.Email),
+        new Claim("Perfil", user.Perfil.Nome)
+    };
 
+    // Adiciona as funcionalidades como Claims
+    foreach (var func in user.Perfil.Funcionalidades)
+    {
+        claims.Add(new Claim("Permissao", func.Nome));
+    }
+
+    var tokenDescriptor = new SecurityTokenDescriptor
+    {
+        Subject = new ClaimsIdentity(claims),
+        Expires = DateTime.UtcNow.AddHours(8),
+        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+    };
+
+    var token = tokenHandler.CreateToken(tokenDescriptor);
+    return tokenHandler.WriteToken(token);
+}
 
 
 
