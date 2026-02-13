@@ -126,3 +126,8 @@ D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\refint\hotelariaApi.dll
 D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\hotelariaApi.pdb
 D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\hotelariaApi.genruntimeconfig.cache
 D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\ref\hotelariaApi.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.OpenApi.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\hotelariaApi.MvcApplicationPartsAssemblyInfo.cs

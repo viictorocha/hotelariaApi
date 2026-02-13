@@ -14,13 +14,20 @@ if (connectionString != null && connectionString.Contains("://")) {
 }
 
 builder.Services.AddDbContext<HotelDbContext>(options => options.UseNpgsql(connectionString));
-
-// Habilitar CORS para o Flutter
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 app.UseCors();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v1");
+    c.RoutePrefix = "swagger";
+});
 
 // Endpoints
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
