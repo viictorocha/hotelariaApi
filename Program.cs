@@ -1,26 +1,26 @@
+using System.Text;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using HotelariaApi.Data;
 using HotelariaApi.Domain;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// --- 1. CONFIGURAÇÃO DE SEGURANÇA (JWT) ---
 var jwtKey = builder.Configuration["JWT_SECRET_KEY"];
 
-// Validação de segurança: Impede a API de subir se a chave estiver vazia
 if (string.IsNullOrEmpty(jwtKey))
 {
-    // Localmente você pode definir uma fixa para não quebrar o projeto
-    jwtKey = "chave_temporaria_desenvolvimento_123456789"; 
-    
-    if (app.Environment.IsProduction()) {
+    jwtKey = "chave_temporaria_desenvolvimento_123456789012"; 
+    if (builder.Environment.IsProduction()) {
         throw new Exception("ERRO CRÍTICO: Variável de ambiente JWT_SECRET_KEY não definida!");
     }
 }
-
-var key = Encoding.ASCII.GetBytes(jwtKey);
+var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(x => {
     x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -31,7 +31,7 @@ builder.Services.AddAuthentication(x => {
     x.SaveToken = true;
     x.TokenValidationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
+        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
         ValidateIssuer = false,
         ValidateAudience = false
     };
@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(x => {
 
 builder.Services.AddAuthorization();
 
-// Configuração do Banco de Dados
+// --- 2. CONFIGURAÇÃO DO BANCO DE DADOS (RENDER COMPATIBLE) ---
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (connectionString != null && connectionString.Contains("://")) {
     var databaseUri = new Uri(connectionString);
@@ -49,26 +49,55 @@ if (connectionString != null && connectionString.Contains("://")) {
 }
 
 builder.Services.AddDbContext<HotelDbContext>(options => options.UseNpgsql(connectionString));
-builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+
+// --- 3. SWAGGER COM SUPORTE A JWT ---
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c => {
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "HotelariaPro API", Version = "v1" });
+    
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+        In = ParameterLocation.Header,
+        Description = "Insira o token JWT desta forma: Bearer {seu_token}",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
 var app = builder.Build();
 
+// --- 4. MIDDLEWARES ---
 app.UseCors();
-
 app.UseSwagger();
-app.UseSwaggerUI(c =>
-{
+app.UseSwaggerUI(c => {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v1");
     c.RoutePrefix = "swagger";
 });
 
-// Endpoints
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --- 5. ENDPOINTS ---
+
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
 
+// QUARTOS
 app.MapGet("/quartos", async (HotelDbContext db) => await db.Quartos.ToListAsync());
-
 app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
     db.Quartos.Add(quarto);
     await db.SaveChangesAsync();
@@ -77,17 +106,20 @@ app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
 
 // AUTH - Login
 app.MapPost("/auth/login", async (Usuario login, HotelDbContext db) => {
-    var user = await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades)
+    var user = await db.Usuarios
+        .Include(u => u.Perfil)
+        .ThenInclude(p => p.Funcionalidades)
         .FirstOrDefaultAsync(u => u.Email == login.Email && u.SenhaHash == login.SenhaHash);
 
     if (user == null) return Results.Unauthorized();
 
-    var token = GenerateJwtToken(user); // Método para gerar o token
+    var token = GenerateJwtToken(user, jwtKey); 
     return Results.Ok(new { token, user });
 });
 
 // USUARIOS
-app.MapGet("/usuarios", async (HotelDbContext db) => await db.Usuarios.Include(u => u.Perfil).ToListAsync());
+app.MapGet("/usuarios", async (HotelDbContext db) => 
+    await db.Usuarios.Include(u => u.Perfil).ToListAsync());
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
     db.Usuarios.Add(user);
@@ -106,38 +138,47 @@ app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
 });
 
 // FUNCIONALIDADES
-app.MapGet("/funcionalidades", async (HotelDbContext db) => await db.Funcionalidades.ToListAsync());
+app.MapGet("/funcionalidades", async (HotelDbContext db) => 
+    await db.Funcionalidades.ToListAsync());
 
-string GenerateJwtToken(Usuario user)
+app.MapPost("/funcionalidades", async (Funcionalidade func, HotelDbContext db) => {
+    db.Funcionalidades.Add(func);
+    await db.SaveChangesAsync();
+    return Results.Created($"/funcionalidades/{func.Id}", func);
+});
+
+// --- 6. FUNÇÕES AUXILIARES ---
+
+string GenerateJwtToken(Usuario user, string secretKey)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
-    var key = Encoding.ASCII.GetBytes(builder.Configuration["JWT_SECRET_KEY"] ?? "chave_temporaria_123456789");
+    var key = Encoding.ASCII.GetBytes(secretKey);
     
     var claims = new List<Claim>
     {
         new Claim(ClaimTypes.Name, user.Email),
-        new Claim("Perfil", user.Perfil.Nome)
+        new Claim("Perfil", user.Perfil?.Nome ?? "Sem Perfil")
     };
 
-    // Adiciona as funcionalidades como Claims
-    foreach (var func in user.Perfil.Funcionalidades)
+    if (user.Perfil?.Funcionalidades != null)
     {
-        claims.Add(new Claim("Permissao", func.Nome));
+        foreach (var func in user.Perfil.Funcionalidades)
+        {
+            claims.Add(new Claim("Permissao", func.Nome));
+        }
     }
 
     var tokenDescriptor = new SecurityTokenDescriptor
     {
         Subject = new ClaimsIdentity(claims),
         Expires = DateTime.UtcNow.AddHours(8),
-        SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        SigningCredentials = new SigningCredentials(
+            new SymmetricSecurityKey(key), 
+            SecurityAlgorithms.HmacSha256Signature)
     };
 
     var token = tokenHandler.CreateToken(tokenDescriptor);
     return tokenHandler.WriteToken(token);
 }
-
-
-
-
 
 app.Run();

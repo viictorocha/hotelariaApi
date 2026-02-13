@@ -131,3 +131,11 @@ D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.
 D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 D:\Desenvolvimento\hotelariaApi\obj\Debug\net9.0\hotelariaApi.MvcApplicationPartsAssemblyInfo.cs
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Abstractions.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.JsonWebTokens.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Logging.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
