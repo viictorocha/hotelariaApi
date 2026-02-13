@@ -1,8 +1,42 @@
 using Microsoft.EntityFrameworkCore;
 using HotelariaApi.Data;
 using HotelariaApi.Domain;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var jwtKey = builder.Configuration["JWT_SECRET_KEY"];
+
+// Validação de segurança: Impede a API de subir se a chave estiver vazia
+if (string.IsNullOrEmpty(jwtKey))
+{
+    // Localmente você pode definir uma fixa para não quebrar o projeto
+    jwtKey = "chave_temporaria_desenvolvimento_123456789"; 
+    
+    if (app.Environment.IsProduction()) {
+        throw new Exception("ERRO CRÍTICO: Variável de ambiente JWT_SECRET_KEY não definida!");
+    }
+}
+
+var key = Encoding.ASCII.GetBytes(jwtKey);
+
+builder.Services.AddAuthentication(x => {
+    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(x => {
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
+});
+
+builder.Services.AddAuthorization();
 
 // Configuração do Banco de Dados
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -39,5 +73,44 @@ app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
     await db.SaveChangesAsync();
     return Results.Created($"/quartos/{quarto.Id}", quarto);
 });
+
+// AUTH - Login
+app.MapPost("/auth/login", async (Usuario login, HotelDbContext db) => {
+    var user = await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades)
+        .FirstOrDefaultAsync(u => u.Email == login.Email && u.SenhaHash == login.SenhaHash);
+
+    if (user == null) return Results.Unauthorized();
+
+    var token = GenerateJwtToken(user); // Método para gerar o token
+    return Results.Ok(new { token, user });
+});
+
+// USUARIOS
+app.MapGet("/usuarios", async (HotelDbContext db) => await db.Usuarios.Include(u => u.Perfil).ToListAsync());
+
+app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
+    db.Usuarios.Add(user);
+    await db.SaveChangesAsync();
+    return Results.Created($"/usuarios/{user.Id}", user);
+});
+
+// PERFIS
+app.MapGet("/perfis", async (HotelDbContext db) => 
+    await db.Perfis.Include(p => p.Funcionalidades).ToListAsync());
+
+app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
+    db.Perfis.Add(perfil);
+    await db.SaveChangesAsync();
+    return Results.Created($"/perfis/{perfil.Id}", perfil);
+});
+
+// FUNCIONALIDADES
+app.MapGet("/funcionalidades", async (HotelDbContext db) => await db.Funcionalidades.ToListAsync());
+
+
+
+
+
+
 
 app.Run();

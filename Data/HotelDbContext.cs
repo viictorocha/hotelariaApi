@@ -7,6 +7,9 @@ public class HotelDbContext : DbContext {
     public HotelDbContext(DbContextOptions<HotelDbContext> options) : base(options) { }
     
     public DbSet<Quarto> Quartos => Set<Quarto>();
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Perfil> Perfis => Set<Perfil>();
+    public DbSet<Funcionalidade> Funcionalidades => Set<Funcionalidade>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
