@@ -130,16 +130,8 @@ app.UseAuthorization();
 
 // --- 5. ENDPOINTS ---
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
-
-// QUARTOS
-app.MapGet("/quartos", async (HotelDbContext db) => await db.Quartos.ToListAsync());
-app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
-    db.Quartos.Add(quarto);
-    await db.SaveChangesAsync();
-    return Results.Created($"/quartos/{quarto.Id}", quarto);
-});
-
 // AUTH - Login
+
 app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
     // Procuramos o usuário pelo email
     var user = await db.Usuarios
@@ -156,35 +148,49 @@ app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
     return Results.Ok(new { token, user });
 });
 
+// QUARTOS
+app.MapGet("/quartos", async (HotelDbContext db) => 
+    await db.Quartos.ToListAsync())
+    .RequireAuthorization(); // <--- Fora do parênteses do MapGet
+
+app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
+    db.Quartos.Add(quarto);
+    await db.SaveChangesAsync();
+    return Results.Created($"/quartos/{quarto.Id}", quarto);
+}).RequireAuthorization();
+
 // USUARIOS
 app.MapGet("/usuarios", async (HotelDbContext db) => 
-    await db.Usuarios.Include(u => u.Perfil).ToListAsync());
+    await db.Usuarios.Include(u => u.Perfil).ToListAsync())
+    .RequireAuthorization();
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
     db.Usuarios.Add(user);
     await db.SaveChangesAsync();
     return Results.Created($"/usuarios/{user.Id}", user);
-});
+}).RequireAuthorization();
 
 // PERFIS
 app.MapGet("/perfis", async (HotelDbContext db) => 
-    await db.Perfis.Include(p => p.Funcionalidades).ToListAsync());
+    await db.Perfis.Include(p => p.Funcionalidades).ToListAsync())
+    .RequireAuthorization();
 
 app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
     db.Perfis.Add(perfil);
     await db.SaveChangesAsync();
     return Results.Created($"/perfis/{perfil.Id}", perfil);
-});
+}).RequireAuthorization();
 
 // FUNCIONALIDADES
 app.MapGet("/funcionalidades", async (HotelDbContext db) => 
-    await db.Funcionalidades.ToListAsync());
+    await db.Funcionalidades.ToListAsync())
+    .RequireAuthorization();
 
 app.MapPost("/funcionalidades", async (Funcionalidade func, HotelDbContext db) => {
     db.Funcionalidades.Add(func);
     await db.SaveChangesAsync();
     return Results.Created($"/funcionalidades/{func.Id}", func);
-});
+}).RequireAuthorization();
 
 // --- 6. FUNÇÕES AUXILIARES ---
 
