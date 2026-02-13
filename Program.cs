@@ -81,10 +81,46 @@ builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p.AllowAnyOrigin().All
 
 var app = builder.Build();
 
+// Bloco para criar o usuário inicial
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<HotelDbContext>();
+    
+    // 1. Garante que o banco existe e as tabelas estão lá
+    context.Database.EnsureCreated();
+
+    // 2. Só cria se não houver nenhum usuário cadastrado
+    if (!context.Usuarios.Any())
+    {
+        // Criar uma funcionalidade mestre
+        var funcMaster = new Funcionalidade { Nome = "FULL_ACCESS", Descricao = "Acesso total ao sistema" };
+        context.Funcionalidades.Add(funcMaster);
+
+        // Criar o perfil Admin e vincular a funcionalidade
+        var perfilAdmin = new Perfil { 
+            Nome = "Admin", 
+            Funcionalidades = new List<Funcionalidade> { funcMaster } 
+        };
+        context.Perfis.Add(perfilAdmin);
+
+        // Criar o usuário mestre
+        context.Usuarios.Add(new Usuario { 
+            Email = "admin@hotel.com", 
+            SenhaHash = "123456", // Em produção, use BCrypt para hash!
+            Perfil = perfilAdmin 
+        });
+
+        context.SaveChanges();
+        Console.WriteLine("--> Usuário admin@hotel.com criado com sucesso!");
+    }
+}
+
 // --- 4. MIDDLEWARES ---
 app.UseCors();
 app.UseSwagger();
-app.UseSwaggerUI(c => {
+app.UseSwaggerUI(c =>
+{
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Hotelaria API v1");
     c.RoutePrefix = "swagger";
 });
@@ -93,7 +129,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // --- 5. ENDPOINTS ---
-
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
 
 // QUARTOS
