@@ -5,3 +5,5 @@ public class Perfil {
     public string Nome { get; set; } = string.Empty; // Ex: "Admin", "Recepcionista"
     public List<Funcionalidade> Funcionalidades { get; set; } = new();
 }
+
+public record UpdatePerfilRequest(string Nome, List<int> FuncionalidadesIds);

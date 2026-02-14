@@ -181,6 +181,29 @@ app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
     return Results.Created($"/perfis/{perfil.Id}", perfil);
 }).RequireAuthorization();
 
+app.MapPut("/perfis/{id}", async (int id, UpdatePerfilRequest request, HotelDbContext db) => {
+    var perfil = await db.Perfis
+        .Include(p => p.Funcionalidades)
+        .FirstOrDefaultAsync(p => p.Id == id);
+
+    if (perfil == null) return Results.NotFound();
+
+    // Atualiza o nome se enviado
+    perfil.Nome = request.Nome;
+
+    // Busca as novas funcionalidades no banco pelos IDs enviados
+    var novasFuncs = await db.Funcionalidades
+        .Where(f => request.FuncionalidadesIds.Contains(f.Id))
+        .ToListAsync();
+
+    // Atualiza a lista de funcionalidades (o Entity Framework cuida da tabela intermediária)
+    perfil.Funcionalidades = novasFuncs;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).RequireAuthorization();
+
+
 // FUNCIONALIDADES
 app.MapGet("/funcionalidades", async (HotelDbContext db) => 
     await db.Funcionalidades.ToListAsync())
