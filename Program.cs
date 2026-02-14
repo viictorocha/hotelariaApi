@@ -175,10 +175,24 @@ app.MapGet("/perfis", async (HotelDbContext db) =>
     await db.Perfis.Include(p => p.Funcionalidades).ToListAsync())
     .RequireAuthorization();
 
-app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
-    db.Perfis.Add(perfil);
+app.MapPost("/perfis", async (PerfilCreateDTO dto, HotelDbContext db) => {
+    
+    var novoPerfil = new Perfil { 
+        Nome = dto.Nome 
+    };
+
+    if (dto.FuncionalidadesIds != null && dto.FuncionalidadesIds.Any()) {
+        var funcsNoBanco = await db.Funcionalidades
+            .Where(f => dto.FuncionalidadesIds.Contains(f.Id))
+            .ToListAsync();
+        
+        novoPerfil.Funcionalidades = funcsNoBanco;
+    }
+
+    db.Perfis.Add(novoPerfil);
     await db.SaveChangesAsync();
-    return Results.Created($"/perfis/{perfil.Id}", perfil);
+
+    return Results.Created($"/perfis/{novoPerfil.Id}", novoPerfil);
 }).RequireAuthorization();
 
 app.MapPut("/perfis/{id}", async (int id, UpdatePerfilRequest request, HotelDbContext db) => {

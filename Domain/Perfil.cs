@@ -9,3 +9,4 @@ public class Perfil {
 }
 
 public record UpdatePerfilRequest(string Nome, List<int> FuncionalidadesIds);
+public record PerfilCreateDTO(string Nome, List<int> FuncionalidadesIds);
