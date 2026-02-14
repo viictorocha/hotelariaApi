@@ -29,13 +29,10 @@ public class HotelDbContext : DbContext {
         modelBuilder.Entity<Perfil>().HasData(new Perfil { Id = 1, Nome = "Admin" });
 
         // Tabela intermediária (Many-to-Many)
-        // Se você estiver usando o mapeamento padrão do EF para Many-to-Many:
-        // foreach (var f in funcs)
-        // {
-        //     modelBuilder.Entity("FuncionalidadePerfil").HasData(
-        //         new { FuncionalidadesId = f.Id, PerfisId = 1 }
-        //     );
-        // }
+        modelBuilder.Entity("FuncionalidadePerfil").HasData(
+                new { FuncionalidadesId = 1, PerfisId = 1 },
+                new { FuncionalidadesId = 2, PerfisId = 1 }
+            );
 
         // 3. Usuário inicial
         modelBuilder.Entity<Usuario>().HasData(new Usuario

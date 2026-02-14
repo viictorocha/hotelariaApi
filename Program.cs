@@ -183,25 +183,24 @@ app.MapPost("/perfis", async (Perfil perfil, HotelDbContext db) => {
 
 app.MapPut("/perfis/{id}", async (int id, UpdatePerfilRequest request, HotelDbContext db) => {
     var perfil = await db.Perfis
-        .Include(p => p.Funcionalidades)
+        .Include(p => p.Funcionalidades) // OBRIGATÓRIO carregar as relações
         .FirstOrDefaultAsync(p => p.Id == id);
 
     if (perfil == null) return Results.NotFound();
 
-    // Atualiza o nome se enviado
     perfil.Nome = request.Nome;
 
-    // Busca as novas funcionalidades no banco pelos IDs enviados
-    var novasFuncs = await db.Funcionalidades
+    // Busca as funcionalidades enviadas pelo Flutter
+    var funcsSelecionadas = await db.Funcionalidades
         .Where(f => request.FuncionalidadesIds.Contains(f.Id))
         .ToListAsync();
 
-    // Atualiza a lista de funcionalidades (o Entity Framework cuida da tabela intermediária)
-    perfil.Funcionalidades = novasFuncs;
+    // O Entity Framework gerencia a tabela intermediária aqui:
+    perfil.Funcionalidades = funcsSelecionadas; 
 
     await db.SaveChangesAsync();
     return Results.NoContent();
-}).RequireAuthorization();
+});
 
 
 // FUNCIONALIDADES
