@@ -33,3 +33,5 @@ Thumbs.db
 /obj/Debug/net9.0
 /obj
 /bin/Debug/net9.0
+bin/Debug/net9.0/hotelariaApi.dll
+*.dll
