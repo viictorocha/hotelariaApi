@@ -139,3 +139,4 @@ D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protoco
 D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\Microsoft.IdentityModel.Tokens.dll
 D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\System.IdentityModel.Tokens.Jwt.dll
+D:\Desenvolvimento\hotelariaApi\bin\Debug\net9.0\BCrypt.Net-Next.dll

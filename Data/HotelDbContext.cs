@@ -39,7 +39,7 @@ public class HotelDbContext : DbContext {
         {
             Id = 1,
             Email = "admin@hotel.com",
-            SenhaHash = "123456", // Lembre-se de usar Hash em produção
+            SenhaHash = "$2a$11$ev6SvHDrS6vTTe9BUn7m9.SXYpT.pOfm4YshO.S.zJv8.M9m7UuO2",
             PerfilId = 1
         });
         

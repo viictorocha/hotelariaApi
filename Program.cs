@@ -169,17 +169,22 @@ app.MapGet("/usuarios", async (HotelDbContext db) =>
     await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades).ToListAsync());
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
-    // 1. Verificar se e-mail já existe
-    if (await db.Usuarios.AnyAsync(u => u.Email == user.Email))
-        return Results.BadRequest("E-mail já cadastrado.");
-
-    // 2. HASHEAR A SENHA - IMPORTANTE: NUNCA ARMAZENAR SENHAS EM TEXTO PLANO!
-    user.Senha = BCrypt.Net.BCrypt.HashPassword(user.Senha);
+    // 1. O Flutter envia a senha em texto puro no campo 'SenhaHash' (ou 'Senha')
+    // Precisamos hashear antes de salvar no banco
+    string senhaPura = user.SenhaHash; 
+    
+    // 2. Substitui o texto puro pelo Hash
+    user.SenhaHash = BCrypt.Net.BCrypt.HashPassword(senhaPura);
 
     db.Usuarios.Add(user);
     await db.SaveChangesAsync();
-    
-    return Results.Created($"/usuarios/{user.Id}", new { user.Id, user.Nome, user.Email });
+
+    // 3. Retorna um objeto anônimo para não devolver o Hash da senha no JSON
+    return Results.Created($"/usuarios/{user.Id}", new { 
+        id = user.Id, 
+        nome = user.Nome, 
+        email = user.Email 
+    });
 }).RequireAuthorization();
 
 // PERFIS
