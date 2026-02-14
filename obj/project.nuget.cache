@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "Mbv2C7H32uA=",
+  "dgSpecHash": "Ho+eNa5Axuk=",
   "success": true,
   "projectFilePath": "D:\\Desenvolvimento\\hotelariaApi\\hotelariaApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\10vii\\.nuget\\packages\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
     "C:\\Users\\10vii\\.nuget\\packages\\humanizer.core\\2.14.1\\humanizer.core.2.14.1.nupkg.sha512",
     "C:\\Users\\10vii\\.nuget\\packages\\microsoft.aspnetcore.authentication.jwtbearer\\9.0.13\\microsoft.aspnetcore.authentication.jwtbearer.9.0.13.nupkg.sha512",
     "C:\\Users\\10vii\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\7.0.0\\microsoft.bcl.asyncinterfaces.7.0.0.nupkg.sha512",

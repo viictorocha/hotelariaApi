@@ -133,18 +133,23 @@ app.MapGet("/", () => "HotelariaPro API v1 - Online");
 // AUTH - Login
 
 app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
-    // Procuramos o usuário pelo email
+    // 1. Procuramos o usuário pelo email
     var user = await db.Usuarios
         .Include(u => u.Perfil)
         .ThenInclude(p => p.Funcionalidades)
         .FirstOrDefaultAsync(u => u.Email == login.Email);
 
-    if (user == null || user.SenhaHash != login.Senha) 
+    // 2. Verificação de Segurança com BCrypt
+    // O método Verify compara o texto puro (login.Senha) com o Hash (user.SenhaHash)
+    if (user == null || !BCrypt.Net.BCrypt.Verify(login.Senha, user.SenhaHash)) 
     {
         return Results.Unauthorized();
     }
 
+    // 3. Se chegou aqui, a senha está correta
     var token = GenerateJwtToken(user, jwtKey); 
+    
+    // Retornamos o token e os dados do usuário (que o Flutter já espera)
     return Results.Ok(new { token, user });
 });
 
@@ -161,13 +166,20 @@ app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
 
 // USUARIOS
 app.MapGet("/usuarios", async (HotelDbContext db) => 
-    await db.Usuarios.Include(u => u.Perfil).ToListAsync())
-    .RequireAuthorization();
+    await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades).ToListAsync());
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
+    // 1. Verificar se e-mail já existe
+    if (await db.Usuarios.AnyAsync(u => u.Email == user.Email))
+        return Results.BadRequest("E-mail já cadastrado.");
+
+    // 2. HASHEAR A SENHA - IMPORTANTE: NUNCA ARMAZENAR SENHAS EM TEXTO PLANO!
+    user.Senha = BCrypt.Net.BCrypt.HashPassword(user.Senha);
+
     db.Usuarios.Add(user);
     await db.SaveChangesAsync();
-    return Results.Created($"/usuarios/{user.Id}", user);
+    
+    return Results.Created($"/usuarios/{user.Id}", new { user.Id, user.Nome, user.Email });
 }).RequireAuthorization();
 
 // PERFIS
