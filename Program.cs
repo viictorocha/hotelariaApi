@@ -133,23 +133,23 @@ app.MapGet("/", () => "HotelariaPro API v1 - Online");
 // AUTH - Login
 
 app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
-    // 1. Procuramos o usuário pelo email
     var user = await db.Usuarios
         .Include(u => u.Perfil)
         .ThenInclude(p => p.Funcionalidades)
         .FirstOrDefaultAsync(u => u.Email == login.Email);
 
-    // 2. Verificação de Segurança com BCrypt
-    // O método Verify compara o texto puro (login.Senha) com o Hash (user.SenhaHash)
-    if (user == null || !BCrypt.Net.BCrypt.Verify(login.Senha, user.SenhaHash)) 
-    {
-        return Results.Unauthorized();
-    }
+    // LOG DE DEBUG (Adicione isso para ver o que está chegando)
+    Console.WriteLine($"Tentativa de login: {login.Email}");
+    Console.WriteLine($"Senha enviada: {login.Senha}");
 
-    // 3. Se chegou aqui, a senha está correta
-    var token = GenerateJwtToken(user, jwtKey); 
+    if (user == null) return Results.Unauthorized();
+
+    // O segredo está aqui:
+    bool senhaValida = BCrypt.Net.BCrypt.Verify(login.Senha, user.SenhaHash);
     
-    // Retornamos o token e os dados do usuário (que o Flutter já espera)
+    if (!senhaValida) return Results.Unauthorized();
+
+    var token = GenerateJwtToken(user, jwtKey); 
     return Results.Ok(new { token, user });
 });
 
@@ -169,11 +169,7 @@ app.MapGet("/usuarios", async (HotelDbContext db) =>
     await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades).ToListAsync());
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
-    // 1. O Flutter envia a senha em texto puro no campo 'SenhaHash' (ou 'Senha')
-    // Precisamos hashear antes de salvar no banco
     string senhaPura = user.SenhaHash; 
-    
-    // 2. Substitui o texto puro pelo Hash
     user.SenhaHash = BCrypt.Net.BCrypt.HashPassword(senhaPura);
 
     db.Usuarios.Add(user);
