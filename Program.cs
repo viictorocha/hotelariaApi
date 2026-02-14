@@ -210,7 +210,7 @@ app.MapPost("/perfis", async (PerfilCreateDTO dto, HotelDbContext db) => {
 
 app.MapPut("/perfis/{id}", async (int id, UpdatePerfilRequest request, HotelDbContext db) => {
     var perfil = await db.Perfis
-        .Include(p => p.Funcionalidades) // OBRIGATÓRIO carregar as relações
+        .Include(p => p.Funcionalidades)
         .FirstOrDefaultAsync(p => p.Id == id);
 
     if (perfil == null) return Results.NotFound();

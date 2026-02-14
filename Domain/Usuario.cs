@@ -5,8 +5,10 @@ public class Usuario {
     public int Id { get; set; }
     public string Nome { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    [JsonIgnore]
+
+    [JsonPropertyName("senha")]
     public string SenhaHash { get; set; } = string.Empty;
+
     public int PerfilId { get; set; }
     public Perfil Perfil { get; set; } = null!;
 }
