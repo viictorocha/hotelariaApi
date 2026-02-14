@@ -1,3 +1,31 @@
-bin/Debug/
-bin/Release/
+# --- [ .NET / C# ] ---
+bin/
 obj/
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+appsettings.Development.json
+
+# --- [ Flutter / Dart ] ---
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.utils
+
+# --- [ Mobile Specific ] ---
+.pub-cache/
+.pub/
+/android/app/debug.keystore
+/android/app/profile.keystore
+/android/local.properties
+
+# --- [ OS Specific ] ---
+.DS_Store
+Thumbs.db
+/bin/Debug/net9.0
+/bin/Debug/net9.0
+/obj
