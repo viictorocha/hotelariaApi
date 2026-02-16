@@ -183,6 +183,34 @@ app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
     });
 }).RequireAuthorization();
 
+app.MapPut("/usuarios/{id}", async (int id, Usuario inputUser, HotelDbContext db) => {
+    var user = await db.Usuarios.FindAsync(id);
+
+    if (user is null) return Results.NotFound();
+
+    user.Nome = inputUser.Nome;
+    user.Email = inputUser.Email;
+    user.PerfilId = inputUser.PerfilId;
+
+    // Se houver uma nova senha no objeto enviado, atualiza o Hash
+    if (!string.IsNullOrWhiteSpace(inputUser.SenhaHash)) {
+        user.SenhaHash = BCrypt.Net.BCrypt.HashPassword(inputUser.SenhaHash);
+    }
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).RequireAuthorization();
+
+app.MapDelete("/usuarios/{id}", async (int id, HotelDbContext db) => {
+    if (await db.Usuarios.FindAsync(id) is Usuario user) {
+        db.Usuarios.Remove(user);
+        await db.SaveChangesAsync();
+        return Results.Ok(new { message = "Usuário removido com sucesso" });
+    }
+
+    return Results.NotFound();
+}).RequireAuthorization();
+
 // PERFIS
 app.MapGet("/perfis", async (HotelDbContext db) => 
     await db.Perfis.Include(p => p.Funcionalidades).ToListAsync())
