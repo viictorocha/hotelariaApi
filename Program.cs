@@ -276,7 +276,7 @@ app.MapPost("/funcionalidades", async (Funcionalidade func, HotelDbContext db) =
 
 // Busca os dados da pousada (sempre o primeiro registro)
 app.MapGet("/pousada", async (HotelDbContext db) => 
-    await db.Pousada.FirstOrDefaultAsync() is Pousada p ? Results.Ok(p) : Results.NotFound()).requireAuthorization();
+    await db.Pousada.FirstOrDefaultAsync() is Pousada p ? Results.Ok(p) : Results.NotFound()).RequireAuthorization();
 
 // Cadastro/Edição (Upsert)
 app.MapPost("/pousada", async (Pousada input, HotelDbContext db) => {
