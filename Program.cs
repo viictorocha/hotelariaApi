@@ -201,14 +201,19 @@ app.MapPut("/usuarios/{id}", async (int id, Usuario inputUser, HotelDbContext db
     return Results.NoContent();
 }).RequireAuthorization();
 
-app.MapDelete("/usuarios/{id}", async (int id, HotelDbContext db) => {
-    if (await db.Usuarios.FindAsync(id) is Usuario user) {
-        db.Usuarios.Remove(user);
-        await db.SaveChangesAsync();
-        return Results.Ok(new { message = "Usuário removido com sucesso" });
+app.MapDelete("/usuarios/{id}", async (int id, HotelDbContext db, ClaimsPrincipal loggedInUser) => {
+    var currentUserId = loggedInUser.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    if (currentUserId == id.ToString()) {
+        return Results.BadRequest("Você não pode excluir sua própria conta.");
     }
 
-    return Results.NotFound();
+    var user = await db.Usuarios.FindAsync(id);
+    if (user is null) return Results.NotFound();
+
+    db.Usuarios.Remove(user);
+    await db.SaveChangesAsync();
+    return Results.Ok();
 }).RequireAuthorization();
 
 // PERFIS
