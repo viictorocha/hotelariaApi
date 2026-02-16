@@ -274,6 +274,33 @@ app.MapPost("/funcionalidades", async (Funcionalidade func, HotelDbContext db) =
     return Results.Created($"/funcionalidades/{func.Id}", func);
 }).RequireAuthorization();
 
+// Busca os dados da pousada (sempre o primeiro registro)
+app.MapGet("/pousada", async (HotelDbContext db) => 
+    await db.Pousada.FirstOrDefaultAsync() is Pousada p ? Results.Ok(p) : Results.NotFound()).requireAuthorization();
+
+// Cadastro/Edição (Upsert)
+app.MapPost("/pousada", async (Pousada input, HotelDbContext db) => {
+    var pousada = await db.Pousada.FirstOrDefaultAsync();
+
+    if (pousada == null) {
+        db.Pousada.Add(input); // Cria se não existir
+    } else {
+        // Atualiza se já existir
+        pousada.NomeFantasia = input.NomeFantasia;
+        pousada.RazaoSocial = input.RazaoSocial;
+        pousada.Cnpj = input.Cnpj;
+        pousada.Telefone = input.Telefone;
+        pousada.Endereco = input.Endereco;
+        pousada.Cidade = input.Cidade;
+        pousada.CheckInPadrao = input.CheckInPadrao;
+        pousada.CheckOutPadrao = input.CheckOutPadrao;
+    }
+
+    await db.SaveChangesAsync();
+    return Results.Ok(pousada ?? input);
+}).RequireAuthorization();
+
+
 // --- 6. FUNÇÕES AUXILIARES ---
 
 string GenerateJwtToken(Usuario user, string secretKey)

@@ -6,6 +6,7 @@ namespace HotelariaApi.Data;
 public class HotelDbContext : DbContext {
     public HotelDbContext(DbContextOptions<HotelDbContext> options) : base(options) { }
     
+    public DbSet<Pousada> Pousada { get; set; }
     public DbSet<Quarto> Quartos => Set<Quarto>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Perfil> Perfis => Set<Perfil>();
