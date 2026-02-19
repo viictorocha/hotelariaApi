@@ -10,7 +10,7 @@ public class Usuario {
     public string SenhaHash { get; set; } = string.Empty;
 
     public int PerfilId { get; set; }
-    public Perfil Perfil { get; set; } = null!;
+    public Perfil? Perfil { get; set; } = null!;
 }
 
 public record LoginRequest(string Email, string Senha);
