@@ -169,17 +169,27 @@ app.MapGet("/usuarios", async (HotelDbContext db) =>
     await db.Usuarios.Include(u => u.Perfil).ThenInclude(p => p.Funcionalidades).ToListAsync());
 
 app.MapPost("/usuarios", async (Usuario user, HotelDbContext db) => {
+    user.Perfil = null!; 
+
     string senhaPura = user.SenhaHash; 
     user.SenhaHash = BCrypt.Net.BCrypt.HashPassword(senhaPura);
 
     db.Usuarios.Add(user);
     await db.SaveChangesAsync();
 
-    // 3. Retorna um objeto anônimo para não devolver o Hash da senha no JSON
-    return Results.Created($"/usuarios/{user.Id}", new { 
-        id = user.Id, 
-        nome = user.Nome, 
-        email = user.Email 
+    var usuarioCriado = await db.Usuarios
+        .Include(u => u.Perfil)
+        .ThenInclude(p => p.Funcionalidades)
+        .FirstOrDefaultAsync(u => u.Id == user.Id);
+
+    if (usuarioCriado == null) return Results.BadRequest();
+
+    return Results.Created($"/usuarios/{usuarioCriado.Id}", new { 
+        id = usuarioCriado.Id, 
+        nome = usuarioCriado.Nome, 
+        email = usuarioCriado.Email,
+        perfilId = usuarioCriado.PerfilId,
+        perfil = usuarioCriado.Perfil
     });
 }).RequireAuthorization();
 
