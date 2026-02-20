@@ -45,6 +45,26 @@ namespace hotelariaApi.Migrations
                         {
                             FuncionalidadesId = 2,
                             PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 3,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 4,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 5,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 6,
+                            PerfisId = 1
                         });
                 });
 
@@ -73,37 +93,37 @@ namespace hotelariaApi.Migrations
                         {
                             Id = 1,
                             Descricao = "Visualizar indicadores e métricas",
-                            Nome = "DASHBOARD"
+                            Nome = "Dashboard"
                         },
                         new
                         {
                             Id = 2,
                             Descricao = "Visualizar status e gerenciar quartos",
-                            Nome = "MAPA_QUARTOS"
+                            Nome = "MapaQuartos"
                         },
                         new
                         {
                             Id = 3,
                             Descricao = "Gerenciar lista e detalhes de reservas",
-                            Nome = "RESERVAS"
+                            Nome = "Reservas"
                         },
                         new
                         {
                             Id = 4,
                             Descricao = "Lançar e gerenciar itens de consumo",
-                            Nome = "CONSUMO"
+                            Nome = "Consumo"
                         },
                         new
                         {
                             Id = 5,
                             Descricao = "Acesso a contas e faturamento",
-                            Nome = "FINANCEIRO"
+                            Nome = "Financeiro"
                         },
                         new
                         {
                             Id = 6,
                             Descricao = "Acesso a configurações do sistema e perfis",
-                            Nome = "CONFIGURACOES"
+                            Nome = "Configuracoes"
                         });
                 });
 
@@ -236,16 +256,6 @@ namespace hotelariaApi.Migrations
                     b.HasIndex("PerfilId");
 
                     b.ToTable("Usuarios");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Email = "admin@hotel.com",
-                            Nome = "",
-                            PerfilId = 1,
-                            SenhaHash = "$2a$11$ev6SvHDrS6vTTe9BUn7m9.SXYpT.pOfm4YshO.S.zJv8.M9m7UuO2"
-                        });
                 });
 
             modelBuilder.Entity("FuncionalidadePerfil", b =>

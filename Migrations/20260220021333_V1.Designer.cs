@@ -11,8 +11,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace hotelariaApi.Migrations
 {
     [DbContext(typeof(HotelDbContext))]
-    [Migration("20260214004459_AtualizaPermissoesMenu")]
-    partial class AtualizaPermissoesMenu
+    [Migration("20260220021333_V1")]
+    partial class V1
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,53 @@ namespace hotelariaApi.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+
+            modelBuilder.Entity("FuncionalidadePerfil", b =>
+                {
+                    b.Property<int>("FuncionalidadesId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PerfisId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("FuncionalidadesId", "PerfisId");
+
+                    b.HasIndex("PerfisId");
+
+                    b.ToTable("FuncionalidadePerfil");
+
+                    b.HasData(
+                        new
+                        {
+                            FuncionalidadesId = 1,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 2,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 3,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 4,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 5,
+                            PerfisId = 1
+                        },
+                        new
+                        {
+                            FuncionalidadesId = 6,
+                            PerfisId = 1
+                        });
+                });
 
             modelBuilder.Entity("HotelariaApi.Domain.Funcionalidade", b =>
                 {
@@ -40,12 +87,7 @@ namespace hotelariaApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int?>("PerfilId")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("PerfilId");
 
                     b.ToTable("Funcionalidades");
 
@@ -54,37 +96,37 @@ namespace hotelariaApi.Migrations
                         {
                             Id = 1,
                             Descricao = "Visualizar indicadores e métricas",
-                            Nome = "DASHBOARD"
+                            Nome = "Dashboard"
                         },
                         new
                         {
                             Id = 2,
                             Descricao = "Visualizar status e gerenciar quartos",
-                            Nome = "MAPA_QUARTOS"
+                            Nome = "MapaQuartos"
                         },
                         new
                         {
                             Id = 3,
                             Descricao = "Gerenciar lista e detalhes de reservas",
-                            Nome = "RESERVAS"
+                            Nome = "Reservas"
                         },
                         new
                         {
                             Id = 4,
                             Descricao = "Lançar e gerenciar itens de consumo",
-                            Nome = "CONSUMO"
+                            Nome = "Consumo"
                         },
                         new
                         {
                             Id = 5,
                             Descricao = "Acesso a contas e faturamento",
-                            Nome = "FINANCEIRO"
+                            Nome = "Financeiro"
                         },
                         new
                         {
                             Id = 6,
                             Descricao = "Acesso a configurações do sistema e perfis",
-                            Nome = "CONFIGURACOES"
+                            Nome = "Configuracoes"
                         });
                 });
 
@@ -110,6 +152,51 @@ namespace hotelariaApi.Migrations
                             Id = 1,
                             Nome = "Admin"
                         });
+                });
+
+            modelBuilder.Entity("HotelariaApi.Domain.Pousada", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CheckInPadrao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CheckOutPadrao")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cidade")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Endereco")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("NomeFantasia")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RazaoSocial")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Pousada");
                 });
 
             modelBuilder.Entity("HotelariaApi.Domain.Quarto", b =>
@@ -155,34 +242,38 @@ namespace hotelariaApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("PerfilId")
                         .HasColumnType("integer");
 
                     b.Property<string>("SenhaHash")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasAnnotation("Relational:JsonPropertyName", "senha");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PerfilId");
 
                     b.ToTable("Usuarios");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Email = "admin@hotel.com",
-                            PerfilId = 1,
-                            SenhaHash = "123456"
-                        });
                 });
 
-            modelBuilder.Entity("HotelariaApi.Domain.Funcionalidade", b =>
+            modelBuilder.Entity("FuncionalidadePerfil", b =>
                 {
+                    b.HasOne("HotelariaApi.Domain.Funcionalidade", null)
+                        .WithMany()
+                        .HasForeignKey("FuncionalidadesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HotelariaApi.Domain.Perfil", null)
-                        .WithMany("Funcionalidades")
-                        .HasForeignKey("PerfilId");
+                        .WithMany()
+                        .HasForeignKey("PerfisId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("HotelariaApi.Domain.Usuario", b =>
@@ -194,11 +285,6 @@ namespace hotelariaApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Perfil");
-                });
-
-            modelBuilder.Entity("HotelariaApi.Domain.Perfil", b =>
-                {
-                    b.Navigation("Funcionalidades");
                 });
 #pragma warning restore 612, 618
         }

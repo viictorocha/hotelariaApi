@@ -16,34 +16,27 @@ public class HotelDbContext : DbContext {
     {
         var funcs = new List<Funcionalidade>
         {
-            new Funcionalidade { Id = 1, Nome = "DASHBOARD", Descricao = "Visualizar indicadores e métricas" },
-            new Funcionalidade { Id = 2, Nome = "MAPA_QUARTOS", Descricao = "Visualizar status e gerenciar quartos" },
-            new Funcionalidade { Id = 3, Nome = "RESERVAS", Descricao = "Gerenciar lista e detalhes de reservas" },
-            new Funcionalidade { Id = 4, Nome = "CONSUMO", Descricao = "Lançar e gerenciar itens de consumo" },
-            new Funcionalidade { Id = 5, Nome = "FINANCEIRO", Descricao = "Acesso a contas e faturamento" },
-            new Funcionalidade { Id = 6, Nome = "CONFIGURACOES", Descricao = "Acesso a configurações do sistema e perfis" }
+            new Funcionalidade { Id = 1, Nome = "Dashboard", Descricao = "Visualizar indicadores e métricas" },
+            new Funcionalidade { Id = 2, Nome = "MapaQuartos", Descricao = "Visualizar status e gerenciar quartos" },
+            new Funcionalidade { Id = 3, Nome = "Reservas", Descricao = "Gerenciar lista e detalhes de reservas" },
+            new Funcionalidade { Id = 4, Nome = "Consumo", Descricao = "Lançar e gerenciar itens de consumo" },
+            new Funcionalidade { Id = 5, Nome = "Financeiro", Descricao = "Acesso a contas e faturamento" },
+            new Funcionalidade { Id = 6, Nome = "Configuracoes", Descricao = "Acesso a configurações do sistema e perfis" }
         };
 
         modelBuilder.Entity<Funcionalidade>().HasData(funcs);
 
-        // 2. Criar Perfil Admin e associar a TODAS as funcionalidades
         modelBuilder.Entity<Perfil>().HasData(new Perfil { Id = 1, Nome = "Admin" });
-
-        // Tabela intermediária (Many-to-Many)
+        
         modelBuilder.Entity("FuncionalidadePerfil").HasData(
                 new { FuncionalidadesId = 1, PerfisId = 1 },
-                new { FuncionalidadesId = 2, PerfisId = 1 }
+                new { FuncionalidadesId = 2, PerfisId = 1 },
+                new { FuncionalidadesId = 3, PerfisId = 1 },
+                new { FuncionalidadesId = 4, PerfisId = 1 },
+                new { FuncionalidadesId = 5, PerfisId = 1 },
+                new { FuncionalidadesId = 6, PerfisId = 1 }
             );
 
-        // 3. Usuário inicial
-        modelBuilder.Entity<Usuario>().HasData(new Usuario
-        {
-            Id = 1,
-            Email = "admin@hotel.com",
-            SenhaHash = "$2a$11$ev6SvHDrS6vTTe9BUn7m9.SXYpT.pOfm4YshO.S.zJv8.M9m7UuO2",
-            PerfilId = 1
-        });
-        
         // Configurações de conversão (Mapping)
         modelBuilder.Entity<Quarto>(entity => {
             entity.Property(e => e.Tipo).HasConversion<string>();
