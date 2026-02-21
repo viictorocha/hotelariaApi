@@ -10,6 +10,7 @@ public class HotelDbContext : DbContext {
     public DbSet<Quarto> Quartos => Set<Quarto>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
     public DbSet<Perfil> Perfis => Set<Perfil>();
+    public DbSet<Consumo> Consumos => Set<Consumo>();
     public DbSet<Funcionalidade> Funcionalidades => Set<Funcionalidade>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

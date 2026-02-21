@@ -95,21 +95,15 @@ app.UseAuthorization();
 
 // --- 5. ENDPOINTS ---
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
-// AUTH - Login
 
+// AUTH - Login
 app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
     var user = await db.Usuarios
         .Include(u => u.Perfil)
         .ThenInclude(p => p.Funcionalidades)
         .FirstOrDefaultAsync(u => u.Email == login.Email);
 
-    // LOG DE DEBUG (Adicione isso para ver o que está chegando)
-    Console.WriteLine($"Tentativa de login: {login.Email}");
-    Console.WriteLine($"Senha enviada: {login.Senha}");
-
     if (user == null) return Results.Unauthorized();
-
-    // O segredo está aqui:
     bool senhaValida = BCrypt.Net.BCrypt.Verify(login.Senha, user.SenhaHash);
     
     if (!senhaValida) return Results.Unauthorized();
@@ -120,13 +114,35 @@ app.MapPost("/auth/login", async (LoginRequest login, HotelDbContext db) => {
 
 // QUARTOS
 app.MapGet("/quartos", async (HotelDbContext db) => 
-    await db.Quartos.ToListAsync())
-    .RequireAuthorization(); // <--- Fora do parênteses do MapGet
+    await db.Quartos.ToListAsync()).RequireAuthorization();
 
 app.MapPost("/quartos", async (Quarto quarto, HotelDbContext db) => {
     db.Quartos.Add(quarto);
     await db.SaveChangesAsync();
     return Results.Created($"/quartos/{quarto.Id}", quarto);
+}).RequireAuthorization();
+
+app.MapPut("/quartos/{id}", async (int id, Quarto quartoAlterado, HotelDbContext db) => {
+    var quarto = await db.Quartos.FindAsync(id);
+    if (quarto == null) return Results.NotFound();
+
+    quarto.Numero = quartoAlterado.Numero;
+    quarto.Tipo = quartoAlterado.Tipo;
+    quarto.Capacidade = quartoAlterado.Capacidade;
+    quarto.PrecoBase = quartoAlterado.PrecoBase;
+    quarto.Status = quartoAlterado.Status;
+
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+}).RequireAuthorization();
+
+app.MapDelete("/quartos/{id}", async (int id, HotelDbContext db) => {
+    var quarto = await db.Quartos.FindAsync(id);
+    if (quarto == null) return Results.NotFound();
+
+    db.Quartos.Remove(quarto);
+    await db.SaveChangesAsync();
+    return Results.Ok();
 }).RequireAuthorization();
 
 // USUARIOS
@@ -253,7 +269,7 @@ app.MapPost("/funcionalidades", async (Funcionalidade func, HotelDbContext db) =
 app.MapGet("/pousada", async (HotelDbContext db) => 
     await db.Pousada.FirstOrDefaultAsync() is Pousada p ? Results.Ok(p) : Results.NotFound()).RequireAuthorization();
 
-// Cadastro/Edição (Upsert)
+// Cadastro/Edição
 app.MapPost("/pousada", async (Pousada input, HotelDbContext db) => {
     var pousada = await db.Pousada.FirstOrDefaultAsync();
 
@@ -273,6 +289,25 @@ app.MapPost("/pousada", async (Pousada input, HotelDbContext db) => {
 
     await db.SaveChangesAsync();
     return Results.Ok(pousada ?? input);
+}).RequireAuthorization();
+
+// CONSUMO
+app.MapPost("/consumo", async (Consumo c, HotelDbContext db) => {
+    db.Consumos.Add(c);
+    await db.SaveChangesAsync();
+    return Results.Ok();
+}).RequireAuthorization();
+
+// DASHBOARD
+app.MapGet("/dashboard/stats", async (HotelDbContext db) => {
+    var hoje = DateTime.Today;
+    return Results.Ok(new {
+        TotalFaturamento = await db.Consumos.Where(c => c.DataLancamento >= hoje).SumAsync(c => c.Valor),
+        Ocupados = await db.Quartos.CountAsync(q => q.Status == StatusQuarto.Ocupado),
+        TotalQuartos = await db.Quartos.CountAsync(),
+        CheckinsHoje = 4, // Aqui viria a lógica da sua tabela de Reservas
+        Limpeza = await db.Quartos.CountAsync(q => q.Status == StatusQuarto.Limpeza)
+    });
 }).RequireAuthorization();
 
 
