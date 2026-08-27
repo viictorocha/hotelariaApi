@@ -1,3 +1,4 @@
+#region Usings
 using System.Text;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
@@ -7,10 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using HotelariaApi.Data;
 using HotelariaApi.Domain;
+#endregion
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- 1. CONFIGURAÇÃO DE SEGURANÇA (JWT) ---
+#region JWT Configuration
 var jwtKey = builder.Configuration["JWT_SECRET_KEY"];
 
 if (string.IsNullOrEmpty(jwtKey))
@@ -38,8 +40,9 @@ builder.Services.AddAuthentication(x => {
 });
 
 builder.Services.AddAuthorization();
+#endregion
 
-// --- 2. CONFIGURAÇÃO DO BANCO DE DADOS (RENDER COMPATIBLE) ---
+ #region Database Configuration
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (connectionString != null && connectionString.Contains("://")) {
     var databaseUri = new Uri(connectionString);
@@ -49,7 +52,9 @@ if (connectionString != null && connectionString.Contains("://")) {
 }
 
 builder.Services.AddDbContext<HotelDbContext>(options => options.UseNpgsql(connectionString));
+#endregion
 
+ #region SWAGGER Configuration
 // --- 3. SWAGGER COM SUPORTE A JWT ---
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
@@ -78,10 +83,11 @@ builder.Services.AddSwaggerGen(c => {
 });
 
 builder.Services.AddCors(opt => opt.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+#endregion
 
 var app = builder.Build();
 
-// --- 4. MIDDLEWARES ---
+#region Middlewares
 app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -92,8 +98,9 @@ app.UseSwaggerUI(c =>
 
 app.UseAuthentication();
 app.UseAuthorization();
+#endregion
 
-// --- 5. ENDPOINTS ---
+#region Endpoints
 app.MapGet("/", () => "HotelariaPro API v1 - Online");
 
 // AUTH - Login
@@ -311,7 +318,9 @@ app.MapGet("/dashboard/stats", async (HotelDbContext db) => {
 }).RequireAuthorization();
 
 
-// --- 6. FUNÇÕES AUXILIARES ---
+#endregion
+
+#region Auxiliar Functions
 string GenerateJwtToken(Usuario user, string secretKey)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
@@ -350,20 +359,36 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<HotelDbContext>();
 
-    // Garante que o banco está criado e as migrations aplicadas
-    context.Database.EnsureCreated(); 
-
-    if (!context.Usuarios.Any(u => u.Email == "admin@hotel.com"))
+    try
     {
-        context.Usuarios.Add(new Usuario
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            Nome = "Administrador",
-            Email = "admin@hotel.com",
-            PerfilId = 1,
-            SenhaHash = BCrypt.Net.BCrypt.HashPassword("Mudar@123")
-        });
-        await context.SaveChangesAsync();
+            Console.WriteLine("Connection string vazia ou não configurada; pulando inicialização do banco.");
+        }
+        else
+        {
+            // Garante que o banco está criado e as migrations aplicadas
+            context.Database.EnsureCreated(); 
+
+            if (!context.Usuarios.Any(u => u.Email == "admin@hotel.com"))
+            {
+                context.Usuarios.Add(new Usuario
+                {
+                    Nome = "Administrador",
+                    Email = "admin@hotel.com",
+                    PerfilId = 1,
+                    SenhaHash = BCrypt.Net.BCrypt.HashPassword("Mudar@123")
+                });
+                await context.SaveChangesAsync();
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Inicialização do banco pulada: {ex.Message}");
     }
 }
 
 app.Run();
+
+#endregion
