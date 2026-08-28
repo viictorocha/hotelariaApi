@@ -6,15 +6,50 @@ namespace HotelariaApi.Data;
 public class HotelDbContext : DbContext {
     public HotelDbContext(DbContextOptions<HotelDbContext> options) : base(options) { }
     
-    public DbSet<Pousada> Pousada { get; set; }
+    public DbSet<Conta> Contas => Set<Conta>();
+    public DbSet<Pousada> Pousadas => Set<Pousada>();
     public DbSet<Quarto> Quartos => Set<Quarto>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<UsuarioPousada> UsuariosPousadas => Set<UsuarioPousada>();
     public DbSet<Perfil> Perfis => Set<Perfil>();
     public DbSet<Consumo> Consumos => Set<Consumo>();
     public DbSet<Funcionalidade> Funcionalidades => Set<Funcionalidade>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<UsuarioPousada>()
+            .HasKey(up => new { up.UsuarioId, up.PousadaId });
+
+        modelBuilder.Entity<UsuarioPousada>()
+            .HasOne(up => up.Usuario)
+            .WithMany(u => u.Pousadas)
+            .HasForeignKey(up => up.UsuarioId);
+
+        modelBuilder.Entity<UsuarioPousada>()
+            .HasOne(up => up.Pousada)
+            .WithMany(p => p.Usuarios)
+            .HasForeignKey(up => up.PousadaId);
+
+        modelBuilder.Entity<UsuarioPousada>()
+            .HasOne(up => up.Perfil)
+            .WithMany()
+            .HasForeignKey(up => up.PerfilId);
+
+        modelBuilder.Entity<Pousada>()
+            .HasOne(p => p.Conta)
+            .WithMany(c => c.Pousadas)
+            .HasForeignKey(p => p.ContaId);
+
+        modelBuilder.Entity<Usuario>()
+            .HasOne(u => u.Conta)
+            .WithMany()
+            .HasForeignKey(u => u.ContaId);
+
+        modelBuilder.Entity<Quarto>()
+            .HasOne(q => q.Pousada)
+            .WithMany(p => p.Quartos)
+            .HasForeignKey(q => q.PousadaId);
+
         var funcs = new List<Funcionalidade>
         {
             new Funcionalidade { Id = 1, Nome = "Dashboard", Descricao = "Visualizar indicadores e métricas" },

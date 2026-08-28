@@ -8,3 +8,9 @@ public class Consumo
     public int Quantidade { get; set; } = 1;
     public DateTime DataLancamento { get; set; } = DateTime.Now;
 }
+
+public record ConsumoCreateRequest(
+    int QuartoId,
+    string Descricao,
+    decimal Valor,
+    int Quantidade);

@@ -10,3 +10,5 @@ public class Funcionalidade {
     [JsonIgnore]
     public List<Perfil> Perfis { get; set; } = new();
 }
+
+public record FuncionalidadeCreateRequest(string Nome, string Descricao);
